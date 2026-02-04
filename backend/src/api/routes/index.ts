@@ -150,19 +150,11 @@ router.get('/admin/stats', async (req, res) => {
   try {
     const totalBookings = await prisma.booking.count();
     const totalUsers = await prisma.user.count();
-    const totalRevenue = await prisma.booking.aggregate({
-      where: { status: 'COMPLETED' },
-      _sum: {
-        service: {
-          price: true,
-        },
-      },
-    });
 
     res.json({
       totalBookings,
       totalUsers,
-      totalRevenue: 0, // Нужна более сложная агрегация
+      totalRevenue: 0, // Нужна более сложная агрегация через join
     });
   } catch (error) {
     res.status(500).json({ error: 'Ошибка сервера' });

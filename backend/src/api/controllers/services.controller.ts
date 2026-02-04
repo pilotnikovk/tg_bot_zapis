@@ -51,7 +51,7 @@ export class ServicesController {
     try {
       const { id } = req.params;
       const service = await prisma.service.findUnique({
-        where: { id: parseInt(id) },
+        where: { id: parseInt(Array.isArray(id) ? id[0] : id) },
         include: {
           category: true,
         },
@@ -105,7 +105,7 @@ export class ServicesController {
       const { name, description, duration, price, categoryId, isActive, order } = req.body;
 
       const service = await prisma.service.update({
-        where: { id: parseInt(id) },
+        where: { id: parseInt(Array.isArray(id) ? id[0] : id) },
         data: {
           ...(name && { name }),
           ...(description !== undefined && { description }),
@@ -136,7 +136,7 @@ export class ServicesController {
 
       // Мягкое удаление - просто деактивируем
       await prisma.service.update({
-        where: { id: parseInt(id) },
+        where: { id: parseInt(Array.isArray(id) ? id[0] : id) },
         data: { isActive: false },
       });
 

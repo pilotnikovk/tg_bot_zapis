@@ -29,7 +29,9 @@ export function createBot() {
   });
 
   // Callback queries
-  bot.on('callback_query:data', handleCallbacks);
+  bot.on('callback_query:data', async (ctx) => {
+    await handleCallbacks(ctx as any);
+  });
 
   // Обработка текстовых сообщений
   bot.on('message:text', handleMessage);

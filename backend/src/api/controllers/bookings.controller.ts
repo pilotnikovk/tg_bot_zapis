@@ -14,9 +14,10 @@ export class BookingsController {
       }
 
       const dateObj = new Date(date as string);
+      const serviceIdStr = Array.isArray(serviceId) ? serviceId[0] : serviceId;
       const slots = await bookingService.getAvailableSlots(
         dateObj,
-        parseInt(Array.isArray(serviceId) ? serviceId[0] : serviceId)
+        parseInt(serviceIdStr as string)
       );
 
       return res.json({ slots });
