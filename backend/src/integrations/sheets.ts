@@ -60,7 +60,7 @@ export class GoogleSheetsIntegration {
   /**
    * Обновить статус записи
    */
-  async updateBookingStatus(bookingId: number, status: string) {
+  async updateBookingStatus(bookingId: number, _status: string) {
     try {
       if (!config.google.spreadsheetId) {
         return;
@@ -73,7 +73,7 @@ export class GoogleSheetsIntegration {
       });
 
       const rows = response.data.values || [];
-      let rowIndex = -1;
+      let _rowIndex = -1;
 
       // Ищем запись по ID (предполагаем, что ID в первом столбце или ищем по другим полям)
       // Упрощенная версия - обновляем последнюю найденную запись

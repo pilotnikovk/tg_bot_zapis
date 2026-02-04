@@ -25,7 +25,7 @@ export class BookingService {
     }
 
     // Определяем день недели
-    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'lowercase' });
+    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
     const workHours = master.workHours as Record<string, { start: string; end: string } | null>;
     const todayWorkHours = workHours[dayOfWeek];
 

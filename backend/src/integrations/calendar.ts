@@ -1,6 +1,5 @@
 import { google } from 'googleapis';
 import { config } from '../utils/config';
-import { formatDateTime } from '../utils/date';
 
 export class GoogleCalendarIntegration {
   private calendar;

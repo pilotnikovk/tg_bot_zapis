@@ -28,7 +28,7 @@ async function main() {
 
     // Логирование запросов в dev режиме
     if (config.nodeEnv === 'development') {
-      app.use((req, res, next) => {
+      app.use((req, _res, next) => {
         console.log(`${req.method} ${req.path}`);
         next();
       });
@@ -38,7 +38,7 @@ async function main() {
     app.use('/api', apiRoutes);
 
     // Обработка ошибок
-    app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
       console.error('Ошибка сервера:', err);
       res.status(500).json({
         error: config.nodeEnv === 'development' ? err.message : 'Внутренняя ошибка сервера',

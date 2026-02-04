@@ -84,7 +84,7 @@ export class BonusService {
   /**
    * Начислить бонусы за отзыв
    */
-  async earnBonusesForReview(userId: number, reviewId: number) {
+  async earnBonusesForReview(userId: number, _reviewId: number) {
     // Получаем сумму бонусов за отзыв из настроек
     const reviewBonusSetting = await prisma.settings.findUnique({
       where: { key: 'review_bonus' },
