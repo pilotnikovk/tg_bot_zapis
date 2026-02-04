@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { bookingService } from '../../services/booking.service';
-import { createNotificationService } from '../../services/notification.service';
 
 export class BookingsController {
   /**
@@ -17,13 +16,13 @@ export class BookingsController {
       const dateObj = new Date(date as string);
       const slots = await bookingService.getAvailableSlots(
         dateObj,
-        parseInt(serviceId as string)
+        parseInt(Array.isArray(serviceId) ? serviceId[0] : serviceId)
       );
 
-      res.json({ slots });
+      return res.json({ slots });
     } catch (error) {
       console.error('Ошибка при получении слотов:', error);
-      res.status(500).json({ error: 'Ошибка сервера' });
+      return res.status(500).json({ error: 'Ошибка сервера' });
     }
   }
 
@@ -49,10 +48,10 @@ export class BookingsController {
       // Отправляем уведомление (нужно передать bot instance)
       // Это будет реализовано в главном файле сервера
 
-      res.status(201).json(booking);
+      return res.status(201).json(booking);
     } catch (error: any) {
       console.error('Ошибка при создании записи:', error);
-      res.status(400).json({ error: error.message || 'Ошибка при создании записи' });
+      return res.status(400).json({ error: error.message || 'Ошибка при создании записи' });
     }
   }
 
@@ -66,10 +65,10 @@ export class BookingsController {
 
       const bookings = await bookingService.getUserBookings(user.id, includeCompleted);
 
-      res.json(bookings);
+      return res.json(bookings);
     } catch (error) {
       console.error('Ошибка при получении записей:', error);
-      res.status(500).json({ error: 'Ошибка сервера' });
+      return res.status(500).json({ error: 'Ошибка сервера' });
     }
   }
 
@@ -81,7 +80,7 @@ export class BookingsController {
       const { id } = req.params;
       const user = (req as any).user;
 
-      const booking = await bookingService.getBookingById(parseInt(id));
+      const booking = await bookingService.getBookingById(parseInt(Array.isArray(id) ? id[0] : id));
 
       if (!booking) {
         return res.status(404).json({ error: 'Запись не найдена' });
@@ -92,10 +91,10 @@ export class BookingsController {
         return res.status(403).json({ error: 'Доступ запрещен' });
       }
 
-      res.json(booking);
+      return res.json(booking);
     } catch (error) {
       console.error('Ошибка при получении записи:', error);
-      res.status(500).json({ error: 'Ошибка сервера' });
+      return res.status(500).json({ error: 'Ошибка сервера' });
     }
   }
 
@@ -107,12 +106,12 @@ export class BookingsController {
       const { id } = req.params;
       const user = (req as any).user;
 
-      const booking = await bookingService.cancelBooking(parseInt(id), user.id);
+      const booking = await bookingService.cancelBooking(parseInt(Array.isArray(id) ? id[0] : id), user.id);
 
-      res.json(booking);
+      return res.json(booking);
     } catch (error: any) {
       console.error('Ошибка при отмене записи:', error);
-      res.status(400).json({ error: error.message || 'Ошибка при отмене записи' });
+      return res.status(400).json({ error: error.message || 'Ошибка при отмене записи' });
     }
   }
 
@@ -142,10 +141,10 @@ export class BookingsController {
 
       const bookings = await bookingService.getUserBookings(0, true); // Simplified for now
 
-      res.json(bookings);
+      return res.json(bookings);
     } catch (error) {
       console.error('Ошибка при получении всех записей:', error);
-      res.status(500).json({ error: 'Ошибка сервера' });
+      return res.status(500).json({ error: 'Ошибка сервера' });
     }
   }
 }
