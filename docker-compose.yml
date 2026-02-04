@@ -25,6 +25,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        - DATABASE_URL=postgresql://postgres:postgres@localhost:5432/dummy?schema=public
     container_name: tgbot_zapis_backend
     restart: unless-stopped
     ports:

@@ -5,6 +5,10 @@ WORKDIR /app
 # Установка OpenSSL для Prisma
 RUN apt-get update -y && apt-get install -y openssl
 
+# Build argument для DATABASE_URL (dummy для build time)
+ARG DATABASE_URL=postgresql://postgres:postgres@localhost:5432/dummy?schema=public
+ENV DATABASE_URL=$DATABASE_URL
+
 # Копируем package files
 COPY package*.json ./
 COPY prisma ./prisma/
