@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:14-alpine
+    container_name: tgbot_zapis_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tgbot_zapis
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend + Telegram Bot
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tgbot_zapis_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/tgbot_zapis?schema=public"
+      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN}"
+      ADMIN_TELEGRAM_ID: "${ADMIN_TELEGRAM_ID}"
+      WEBAPP_URL: "http://localhost:3000"
+      JWT_SECRET: "tgbot_zapis_jwt_secret_key_2024_super_secure_random_string"
+      PORT: 8000
+      NODE_ENV: development
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+      GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
+      GOOGLE_REFRESH_TOKEN: "${GOOGLE_REFRESH_TOKEN:-}"
+      GOOGLE_SPREADSHEET_ID: "${GOOGLE_SPREADSHEET_ID:-}"
+      GOOGLE_CALENDAR_ID: "${GOOGLE_CALENDAR_ID:-}"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: sh -c "npx prisma generate && npx prisma db push && npm run db:seed && npm run dev"
+
+  # WebApp (Next.js)
+  webapp:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile
+    container_name: tgbot_zapis_webapp
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:8000"
+      NEXT_PUBLIC_TELEGRAM_BOT_USERNAME: "${TELEGRAM_BOT_USERNAME:-}"
+    depends_on:
+      - backend
+    volumes:
+      - ./webapp:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+
+volumes:
+  postgres_data:

@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Пользователи (клиенты)
+model User {
+  id            Int      @id @default(autoincrement())
+  telegramId    BigInt   @unique
+  firstName     String
+  lastName      String?
+  username      String?
+  phone         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  bookings      Booking[]
+  reviews       Review[]
+  bonusAccount  BonusAccount?
+  notifications Notification[]
+
+  @@index([telegramId])
+  @@map("users")
+}
+
+// Мастер
+model Master {
+  id         Int      @id @default(autoincrement())
+  name       String
+  phone      String
+  bio        String?
+  avatar     String?
+  workHours  Json     // {"monday": {"start": "09:00", "end": "18:00"}, ...}
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("masters")
+}
+
+// Категории услуг
+model ServiceCategory {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  order    Int       @default(0)
+  services Service[]
+
+  @@map("service_categories")
+}
+
+// Услуги
+model Service {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  duration    Int      // в минутах
+  price       Decimal  @db.Decimal(10, 2)
+  categoryId  Int
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category ServiceCategory @relation(fields: [categoryId], references: [id])
+  bookings Booking[]
+
+  @@index([categoryId])
+  @@map("services")
+}
+
+// Записи
+model Booking {
+  id        Int           @id @default(autoincrement())
+  userId    Int
+  serviceId Int
+  startTime DateTime
+  endTime   DateTime
+  status    BookingStatus @default(PENDING)
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user               User               @relation(fields: [userId], references: [id])
+  service            Service            @relation(fields: [serviceId], references: [id])
+  review             Review?
+  bonusTransaction   BonusTransaction[]
+
+  @@index([userId])
+  @@index([serviceId])
+  @@index([startTime])
+  @@index([status])
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+// Примеры работ
+model WorkExample {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  imageUrl    String
+  category    String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@map("work_examples")
+}
+
+// Отзывы
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  bookingId Int      @unique
+  rating    Int      // 1-5
+  comment   String?
+  photos    Json?    // массив URL фотографий
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id])
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@index([userId])
+  @@index([rating])
+  @@map("reviews")
+}
+
+// Бонусный счет
+model BonusAccount {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @unique
+  balance     Decimal  @default(0) @db.Decimal(10, 2)
+  totalEarned Decimal  @default(0) @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user         User               @relation(fields: [userId], references: [id])
+  transactions BonusTransaction[]
+
+  @@map("bonus_accounts")
+}
+
+// Транзакции бонусов
+model BonusTransaction {
+  id        Int                     @id @default(autoincrement())
+  accountId Int
+  bookingId Int?
+  amount    Decimal                 @db.Decimal(10, 2)
+  type      BonusTransactionType
+  reason    String?
+  createdAt DateTime                @default(now())
+
+  account BonusAccount @relation(fields: [accountId], references: [id])
+  booking Booking?     @relation(fields: [bookingId], references: [id])
+
+  @@index([accountId])
+  @@map("bonus_transactions")
+}
+
+enum BonusTransactionType {
+  EARNED
+  SPENT
+  BONUS
+}
+
+// История уведомлений
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  type      NotificationType
+  message   String
+  sentAt    DateTime         @default(now())
+  isRead    Boolean          @default(false)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  BOOKING_CONFIRMED
+  BOOKING_REMINDER_24H
+  BOOKING_REMINDER_2H
+  BONUS_EARNED
+  REVIEW_REQUEST
+  NEW_WORK_ADDED
+  SPECIAL_OFFER
+}
+
+// Настройки системы
+model Settings {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+
+  @@map("settings")
+}
+
+// Блокировка времени (выходные, перерывы)
+model TimeBlock {
+  id        Int       @id @default(autoincrement())
+  startTime DateTime
+  endTime   DateTime
+  reason    String?
+  type      BlockType @default(BREAK)
+  createdAt DateTime  @default(now())
+
+  @@index([startTime, endTime])
+  @@map("time_blocks")
+}
+
+enum BlockType {
+  BREAK
+  DAY_OFF
+  PERSONAL
+}
